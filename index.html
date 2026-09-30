@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="A simple December holiday comparer with editable costs, budget and relaxation ratings.">
+    <title>December Escape · Trip Comparer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header class="hero">
+        <p class="eyebrow">December Escape <span>·</span> Trip comparer</p>
+        <h1>Make room for a<br><em>restful December.</em></h1>
+        <p class="intro">Put your holiday options side by side. Change the costs, check the budget, and decide how relaxing each trip would feel.</p>
+      </header>
+
+      <section class="budget-panel" aria-labelledby="budget-heading">
+        <div>
+          <h2 id="budget-heading">Start with your budget</h2>
+          <p>All amounts are in CNY (RMB), for everyone travelling.</p>
+        </div>
+        <div class="budget-control">
+          <label for="budget">Total trip budget · CNY</label>
+          <input id="budget" type="number" min="0" max="1000000000" step="0.01" inputmode="decimal" placeholder="Enter your budget" aria-describedby="budget-help">
+          <small id="budget-help">Compare the whole trip against this amount.</small>
+        </div>
+      </section>
+
+      <section class="comparison" aria-labelledby="comparison-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">The possibilities</p>
+            <h2 id="comparison-heading">Your destinations, side by side</h2>
+          </div>
+          <button id="reset" type="button">Reset inputs</button>
+        </div>
+        <p class="instructions" id="comparison-help">Enter return flights for everyone and the nightly hotel total for all rooms. Add other costs as one trip total. Rate relaxation from 1 (busy) to 10 (very restful).</p>
+        <p class="scroll-hint" id="scroll-help">On a small screen, swipe the table to see every destination.</p>
+
+        <noscript><p class="notice">Enable JavaScript in your browser to edit and compare trip costs.</p></noscript>
+        <div class="table-scroll" tabindex="0" role="region" aria-labelledby="comparison-heading" aria-describedby="scroll-help">
+          <table aria-describedby="comparison-help">
+            <caption class="sr-only">Editable December destination costs and calculated comparisons. Each destination has its own column.</caption>
+            <thead id="destinations-heading"></thead>
+            <tbody id="destinations-body"></tbody>
+          </table>
+        </div>
+        <div class="comparison-footer">
+          <p id="summary" role="status" aria-live="polite" aria-atomic="true">Add flight and hotel costs to compare estimates.</p>
+          <p id="shortlist-summary">Shortlist the destinations you want to keep.</p>
+        </div>
+      </section>
+
+      <footer class="page-footer">
+        <p><strong>How the estimate works</strong><br>Return flights + (nightly hotel cost × nights) + other trip costs.</p>
+        <p>Enter current quotes and your own relaxation ratings. Other costs can include meals, transfers, visas and activities. Your entries are saved in this browser.</p>
+        <p class="storage-status" id="storage-status" role="status" aria-live="polite"></p>
+      </footer>
+
+      <dialog id="reset-dialog" aria-labelledby="reset-heading" aria-describedby="reset-description">
+        <h2 id="reset-heading">Reset your comparison?</h2>
+        <p id="reset-description">This clears your saved prices, budget, ratings and shortlist. Trip lengths return to 7 nights.</p>
+        <form method="dialog" class="dialog-actions">
+          <button value="cancel">Keep my inputs</button>
+          <button value="reset" class="primary-button">Reset inputs</button>
+        </form>
+      </dialog>
+    </main>
+  </body>
+</html>
