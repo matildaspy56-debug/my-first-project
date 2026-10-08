@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "december-escape-plan-v1";
+  const SCENARIOS_KEY = "december-escape-scenarios-v1";
   const DESTINATIONS = ["Sanya", "Malaysia", "Singapore", "Australia", "Portugal"];
   const MAX_AMOUNT = 1000000000;
   const FIELDS = [
@@ -58,9 +59,60 @@
     return plan;
   }
 
+  function createScenarios(legacy) {
+    return { version: 1, activeId: "scenario-1", scenarios: [{ id: "scenario-1", name: "My first plan", plan: restorePlan(legacy) }] };
+  }
+  function restoreScenarios(saved, legacy) {
+    if (!saved || saved.version !== 1 || !Array.isArray(saved.scenarios)) return createScenarios(legacy);
+    const ids = new Set();
+    const scenarios = saved.scenarios.filter(item => {
+      if (!item || typeof item.id !== "string" || !item.id || ids.has(item.id) || typeof item.name !== "string" || !item.name.trim() || !item.plan || item.plan.version !== 1 || !Array.isArray(item.plan.destinations)) return false;
+      ids.add(item.id);
+      return true;
+    }).map(item => ({ id: item.id, name: item.name.trim().slice(0, 80), plan: restorePlan(item.plan) }));
+    if (!scenarios.length) return createScenarios(legacy);
+    return { version: 1, activeId: ids.has(saved.activeId) ? saved.activeId : scenarios[0].id, scenarios };
+  }
+  function activeScenario(state) { return state.scenarios.find(item => item.id === state.activeId); }
+  function addScenario(state, name) {
+    name = name.trim().slice(0, 80);
+    if (!name) return false;
+    let n = 1;
+    while (state.scenarios.some(item => item.id === `scenario-${n}`)) n += 1;
+    const item = { id: `scenario-${n}`, name, plan: restorePlan(activeScenario(state).plan) };
+    state.scenarios.push(item);
+    state.activeId = item.id;
+    return true;
+  }
+  function switchScenario(state, id) {
+    if (!state.scenarios.some(item => item.id === id)) return false;
+    state.activeId = id;
+    return true;
+  }
+  function renameScenario(state, name) {
+    name = name.trim().slice(0, 80);
+    if (!name) return false;
+    activeScenario(state).name = name;
+    return true;
+  }
+  function deleteScenario(state) {
+    if (state.scenarios.length === 1) return false;
+    state.scenarios = state.scenarios.filter(item => item.id !== state.activeId);
+    state.activeId = state.scenarios[0].id;
+    return true;
+  }
+  function loadScenarios(storage) {
+    const read = key => { try { return JSON.parse(storage.getItem(key)); } catch (error) { if (error instanceof SyntaxError) return null; throw error; } };
+    return restoreScenarios(read(SCENARIOS_KEY), read(STORAGE_KEY));
+  }
+  function saveScenarios(storage, state) {
+    storage.setItem(SCENARIOS_KEY, JSON.stringify(state));
+    storage.setItem(STORAGE_KEY, JSON.stringify(activeScenario(state).plan));
+  }
+
   // The same small calculation module is available to Node's built-in test runner.
   if (typeof module !== "undefined" && module.exports) {
-    module.exports = { createPlan, parseAmount, calculateEstimate, restorePlan, DESTINATIONS };
+    module.exports = { createPlan, parseAmount, calculateEstimate, restorePlan, DESTINATIONS, createScenarios, restoreScenarios, activeScenario, addScenario, switchScenario, renameScenario, deleteScenario, loadScenarios, saveScenarios, STORAGE_KEY, SCENARIOS_KEY };
     return;
   }
 
@@ -68,13 +120,16 @@
   const formatMoney = cents => money.format(cents / 100);
   const budgetInput = document.getElementById("budget");
   const storageStatus = document.getElementById("storage-status");
+  let scenarios;
   let plan;
   try {
-    plan = restorePlan(JSON.parse(localStorage.getItem(STORAGE_KEY)));
+    scenarios = loadScenarios(localStorage);
   } catch {
-    plan = createPlan();
+    scenarios = createScenarios();
     storageStatus.textContent = "Saved inputs could not be loaded. You can still use this comparison.";
   }
+
+  plan = activeScenario(scenarios).plan;
 
   const heading = document.getElementById("destinations-heading");
   const body = document.getElementById("destinations-body");
@@ -104,7 +159,7 @@
 
   function save() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(plan));
+      saveScenarios(localStorage, scenarios);
       storageStatus.textContent = "";
     } catch {
       storageStatus.textContent = "Browser saving is unavailable. Your inputs will last only for this visit.";
@@ -174,11 +229,48 @@
   resetDialog.addEventListener("close", () => {
     if (resetDialog.returnValue !== "reset") return;
     plan = createPlan();
+    activeScenario(scenarios).plan = plan;
     setControls();
     updateResults();
     save();
   });
 
-  setControls();
-  updateResults();
+  const scenarioSelect = document.getElementById("scenario-select");
+  function showScenario() {
+    plan = activeScenario(scenarios).plan;
+    scenarioSelect.replaceChildren(...scenarios.scenarios.map(item => {
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.name;
+      return option;
+    }));
+    scenarioSelect.value = scenarios.activeId;
+    document.getElementById("delete-scenario").disabled = scenarios.scenarios.length === 1;
+    setControls();
+    updateResults();
+  }
+  scenarioSelect.addEventListener("change", () => {
+    switchScenario(scenarios, scenarioSelect.value);
+    showScenario();
+    save();
+  });
+  document.getElementById("new-scenario").addEventListener("click", () => {
+    const name = window.prompt("Name the new copy of this plan (up to 80 characters):", "New plan");
+    if (name === null || !addScenario(scenarios, name)) return;
+    showScenario();
+    save();
+  });
+  document.getElementById("rename-scenario").addEventListener("click", () => {
+    const name = window.prompt("Rename this plan (up to 80 characters):", activeScenario(scenarios).name);
+    if (name === null || !renameScenario(scenarios, name)) return;
+    showScenario();
+    save();
+  });
+  document.getElementById("delete-scenario").addEventListener("click", () => {
+    if (scenarios.scenarios.length === 1 || !window.confirm(`Delete "${activeScenario(scenarios).name}"? This cannot be undone.`)) return;
+    deleteScenario(scenarios);
+    showScenario();
+    save();
+  });
+  showScenario();
 })();

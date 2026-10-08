@@ -95,3 +95,10 @@ dialog p { font-size: 14px; color: var(--muted); }
   th, td { padding: 14px 12px; }
   .page-footer { grid-template-columns: 1fr; gap: 16px; }
 }
+
+.scenario-panel { margin-bottom: 24px; }
+.scenario-panel p { color: var(--muted); font-size: 14px; }
+.scenario-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.scenario-controls label { font-size: 13px; font-weight: 600; }
+.scenario-controls select { width: min(100%, 300px); }
+button:disabled { opacity: .5; cursor: default; }
