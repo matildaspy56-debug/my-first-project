@@ -16,6 +16,18 @@
         <p class="intro">Put your holiday options side by side. Change the costs, check the budget, and decide how relaxing each trip would feel.</p>
       </header>
 
+      <section class="scenario-panel" aria-labelledby="scenario-heading">
+        <h2 id="scenario-heading">Your saved plans</h2>
+        <p>Edits save automatically to the selected plan. Save a copy to explore another option.</p>
+        <div class="scenario-controls">
+          <label for="scenario-select">Current plan</label>
+          <select id="scenario-select"></select>
+          <button id="new-scenario" type="button">Save as new</button>
+          <button id="rename-scenario" type="button">Rename</button>
+          <button id="delete-scenario" type="button">Delete</button>
+        </div>
+      </section>
+
       <section class="budget-panel" aria-labelledby="budget-heading">
         <div>
           <h2 id="budget-heading">Start with your budget</h2>
@@ -61,7 +73,7 @@
 
       <dialog id="reset-dialog" aria-labelledby="reset-heading" aria-describedby="reset-description">
         <h2 id="reset-heading">Reset your comparison?</h2>
-        <p id="reset-description">This clears your saved prices, budget, ratings and shortlist. Trip lengths return to 7 nights.</p>
+        <p id="reset-description">This clears prices, budget, ratings and shortlist in the selected plan only. Other saved plans are kept. Trip lengths return to 7 nights.</p>
         <form method="dialog" class="dialog-actions">
           <button value="cancel">Keep my inputs</button>
           <button value="reset" class="primary-button">Reset inputs</button>
